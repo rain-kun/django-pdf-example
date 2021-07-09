@@ -8,10 +8,11 @@ from .generator import save_pdf
 # Create your views here.
 
 # simple form
-class SForm(forms.Form):
-    name = forms.CharField(label='name', max_length=50)
-    profession = forms.CharField(label='profession', max_length=50)
-    description = forms.CharField(label='description', max_length=100)
+class SForm(forms.ModelForm):
+
+    class Meta:
+        model = Profile
+        fields = ['name', 'profession', 'description']
 
 
 def index(request):
@@ -25,11 +26,11 @@ def index(request):
     if request.method == 'POST':
         form = SForm(request.POST)
         data = {k:v[0] for k,v in dict(request.POST).items()}
-        print(data)
         if form.is_valid():
-            
+            # call the generator.py function
             pdf_name, status = save_pdf(data)
-            
+            # save the data for api
+            form.save()
             return render(request, "pdf_constructor/index.html", {
                     'form': SForm(),
                     'status': status,
@@ -46,7 +47,7 @@ class generatePdf(APIView):
             return Response ({'status': 400})
     
     def get(self, request, id):
-        params = get_object(id)
+        params = self.get_object(id)
         
         pdf_name, status = save_pdf(params)
 
